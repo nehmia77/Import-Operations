@@ -1,0 +1,6 @@
+{
+  "name": "ImportOps Tracker - Proforma & Milestone Sheet",
+  "description": "Smart import operation follow-up spreadsheet with automated foreign currency approval, insurance, and bank permit milestone tracking, status coloring, and Google Sheets export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
