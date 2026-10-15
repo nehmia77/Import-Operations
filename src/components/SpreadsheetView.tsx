@@ -1079,17 +1079,21 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
           <tbody className="divide-y divide-slate-200">
             {filteredItems.length === 0 ? (
               <tr>
-                <td colSpan={18} className="py-12 text-center text-slate-500">
-                  <div className="flex flex-col items-center justify-center">
-                    <FileSpreadsheet className="w-8 h-8 text-slate-300 mb-2" />
-                    <p className="font-semibold text-slate-700">No import operations match this filter</p>
-                    <p className="text-xs text-slate-400 mt-1">Try clearing your search or add a new Proforma Invoice row.</p>
+                <td colSpan={18} className="py-16 text-center text-slate-500">
+                  <div className="flex flex-col items-center justify-center max-w-md mx-auto">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center mb-3">
+                      <FileSpreadsheet className="w-6 h-6" />
+                    </div>
+                    <p className="font-bold text-slate-900 text-sm">Clean Follow-Up Sheet Ready</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      No default items. Click below to add your first Proforma Invoice item. Foreign currency approval, Insurance, and Bank Permit will be automatically initialized for you!
+                    </p>
                     <button
                       onClick={onAddNewRow}
-                      className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg cursor-pointer"
+                      className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 px-4 py-2 rounded-lg shadow-xs cursor-pointer transition-colors"
                     >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Add First Import Row</span>
+                      <Plus className="w-4 h-4" />
+                      <span>+ Insert First Import PI</span>
                     </button>
                   </div>
                 </td>

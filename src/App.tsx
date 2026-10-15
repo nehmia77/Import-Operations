@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { ImportItem, MilestoneId, calculateSummaryStats, createNewImportItem, updateMilestone } from './utils/trackerLogic';
-import { INITIAL_IMPORT_ITEMS } from './data/mockImports';
 import { Header } from './components/Header';
 import { StatsBar } from './components/StatsBar';
 import { SpreadsheetView } from './components/SpreadsheetView';
@@ -9,19 +8,32 @@ import { GoogleSheetModal } from './components/GoogleSheetModal';
 import { NewItemModal } from './components/NewItemModal';
 import { ItemDrawer } from './components/ItemDrawer';
 import { LocalSetupModal } from './components/LocalSetupModal';
-import { RotateCcw, FileSpreadsheet, Download, Laptop, CheckCircle2 } from 'lucide-react';
+import { Download, Laptop } from 'lucide-react';
 
-const STORAGE_KEY = 'importops_tracker_data_v1';
+const STORAGE_KEY = 'importops_user_sheet_data';
 
 export default function App() {
   const [items, setItems] = useState<ImportItem[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Keep only user's real items, filter out old demo mock data
+          const filtered = parsed.filter(
+            (i) =>
+              !i.id.startsWith('imp-00') &&
+              i.item !== 'Industrial Submersible Water Pumps 7.5kW' &&
+              i.item !== 'High Density Polyethylene (HDPE) Blow Molding Granules' &&
+              i.item !== 'Heavy Duty Truck Spare Parts & Brake Assemblies' &&
+              i.item !== 'Pharmaceutical Grade Paracetamol BP Raw Material Active Ingredients' &&
+              i.item !== 'Steel Deformed Reinforcing Bars Grade 60 (12mm & 16mm)'
+          );
+          return filtered;
+        }
       }
     } catch (_) {}
-    return INITIAL_IMPORT_ITEMS;
+    return []; // Clean empty sheet! No mock or sample data until user enters it.
   });
 
   const [activeTab, setActiveTab] = useState<'spreadsheet' | 'kanban' | 'googlesheets'>('spreadsheet');
@@ -84,7 +96,7 @@ export default function App() {
   // Duplicate row
   const handleDuplicateItem = (item: ImportItem) => {
     const duplicate = createNewImportItem({
-      item: `${item.item} (Copy)`,
+      item: `${item.item || 'Item'} (Copy)`,
       quantity: item.quantity,
       totalAmount: item.totalAmount,
       currency: item.currency,
@@ -100,20 +112,21 @@ export default function App() {
     setItems((prev) => [duplicate, ...prev]);
   };
 
-  // Quick insert new row with default Foreign currency approval, Insurance, Bank Permit
+  // Quick insert new clean row with default Foreign currency approval, Insurance, Bank Permit
   const handleAddNewRow = () => {
     const newItem = createNewImportItem({
-      item: 'New Import Goods',
-      quantity: '1 Lot',
-      totalAmount: 25000,
+      item: '',
+      quantity: '',
+      totalAmount: 0,
       currency: 'USD',
-      supplier: 'Supplier Global Ltd',
+      supplier: '',
       termOfDelivery: 'FOB',
       termOfPayment: 'LC at Sight',
       bank: 'Commercial Bank of Ethiopia (CBE)',
-      voyageFrom: 'Shanghai, China',
+      voyageFrom: '',
       voyageTo: 'Djibouti Port',
-      piNo: `PI-2026-${Math.floor(100 + Math.random() * 900)}`,
+      piNo: '',
+      piDate: new Date().toISOString().slice(0, 10),
     });
     setItems((prev) => [...prev, newItem]);
   };
@@ -127,14 +140,6 @@ export default function App() {
   const handleUpdateItem = (updatedItem: ImportItem) => {
     setItems((prev) => prev.map((i) => (i.id === updatedItem.id ? updatedItem : i)));
     setSelectedItemForDrawer(null);
-  };
-
-  // Reset to demo data
-  const handleResetData = () => {
-    if (confirm('Reset tracker data to initial template items?')) {
-      setItems(INITIAL_IMPORT_ITEMS);
-      localStorage.removeItem(STORAGE_KEY);
-    }
   };
 
   return (
@@ -182,15 +187,6 @@ export default function App() {
             >
               <Laptop className="w-3.5 h-3.5 text-indigo-600" />
               <span>Run on PC & Backup</span>
-            </button>
-
-            <button
-              onClick={handleResetData}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-              title="Reset to sample dataset"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset</span>
             </button>
           </div>
         </div>
