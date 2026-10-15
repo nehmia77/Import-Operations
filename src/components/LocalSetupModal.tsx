@@ -183,6 +183,43 @@ npm run dev
               The server will start at <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-slate-800">http://localhost:3000</code>. It runs 100% locally on your computer, does not require an active internet connection, and automatically preserves your data in your browser!
             </p>
           </div>
+
+          {/* Section 4: GitHub Pages Blank Screen Fix */}
+          <div className="border border-amber-200 rounded-xl p-4 bg-amber-50/50">
+            <h4 className="font-bold text-amber-950 text-sm mb-1.5 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span>Why GitHub Pages Was Empty & How It Is Fixed</span>
+            </h4>
+            <p className="text-amber-900 leading-relaxed mb-3">
+              GitHub Pages showed a blank white screen because:
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-amber-950 mb-3">
+              <li>
+                <strong>Raw source vs compiled build:</strong> GitHub was serving raw uncompiled TypeScript (<code className="bg-amber-100 px-1 rounded">/src/main.tsx</code>) instead of the built bundle (<code className="bg-amber-100 px-1 rounded">dist/</code>).
+              </li>
+              <li>
+                <strong>Missing repository subpath:</strong> Vite needed <code className="bg-amber-100 px-1 rounded">base: './'</code> so assets load from <code className="bg-amber-100 px-1 rounded">/Import-Operations/</code> rather than root.
+              </li>
+            </ul>
+
+            <div className="bg-white p-3 rounded-lg border border-amber-200 text-slate-800">
+              <strong className="block text-slate-900 mb-1">To update your GitHub site:</strong>
+              <ol className="list-decimal list-inside space-y-1.5 text-[11px]">
+                <li>
+                  Push the updated files (including <code className="font-mono bg-slate-100 px-1 rounded">.github/workflows/deploy.yml</code> and <code className="font-mono bg-slate-100 px-1 rounded">vite.config.ts</code>) to your GitHub repository.
+                </li>
+                <li>
+                  On GitHub, go to <strong>Settings &gt; Pages</strong>.
+                </li>
+                <li>
+                  Under <strong>Build and deployment &gt; Source</strong>, select <strong>GitHub Actions</strong>.
+                </li>
+                <li>
+                  GitHub will automatically build and publish your working website to <code className="font-mono text-indigo-700 font-semibold">https://nehmia77.github.io/Import-Operations/</code> in ~60 seconds!
+                </li>
+              </ol>
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
