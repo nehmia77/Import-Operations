@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ImportItem, MilestoneId } from '../utils/trackerLogic';
+import { COMMON_DELIVERY_TERMS, COMMON_PAYMENT_TERMS, COMMON_BANKS } from '../types';
 import {
   X,
   CheckCircle2,
@@ -89,37 +90,143 @@ export const ItemDrawer: React.FC<ItemDrawerProps> = ({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs">
-          {/* Key Overview */}
-          <div className="grid grid-cols-2 gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-            <div>
-              <span className="text-slate-500 block text-[11px]">Total Value</span>
-              <span className="font-mono font-bold text-slate-900 text-sm">
-                {formData.currency} {formData.totalAmount.toLocaleString()}
-              </span>
+          {/* Key Overview & Terms Edit */}
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+            <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-slate-500">
+              Proforma Details & Terms
+            </h4>
+
+            {/* Delivery & Payment Terms */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  Term of Delivery (Incoterm)
+                </label>
+                <select
+                  value={formData.termOfDelivery}
+                  onChange={(e) =>
+                    setFormData({ ...formData, termOfDelivery: e.target.value })
+                  }
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white text-xs font-medium focus:border-emerald-500 outline-none"
+                >
+                  {COMMON_DELIVERY_TERMS.map((term) => {
+                    const code = term.split(' ')[0];
+                    return (
+                      <option key={term} value={code}>
+                        {term}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  Term of Payment
+                </label>
+                <select
+                  value={formData.termOfPayment}
+                  onChange={(e) =>
+                    setFormData({ ...formData, termOfPayment: e.target.value })
+                  }
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white text-xs font-medium focus:border-emerald-500 outline-none"
+                >
+                  {COMMON_PAYMENT_TERMS.map((pay) => (
+                    <option key={pay} value={pay}>
+                      {pay}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div>
-              <span className="text-slate-500 block text-[11px]">Quantity</span>
-              <span className="font-medium text-slate-800">{formData.quantity}</span>
+
+            {/* Total Amount, Quantity & Currency */}
+            <div className="grid grid-cols-3 gap-2 pt-1">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  Total Amount
+                </label>
+                <input
+                  type="number"
+                  value={formData.totalAmount}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      totalAmount: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white text-xs font-mono font-bold focus:border-emerald-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  Currency
+                </label>
+                <select
+                  value={formData.currency}
+                  onChange={(e) =>
+                    setFormData({ ...formData, currency: e.target.value })
+                  }
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white text-xs font-mono focus:border-emerald-500 outline-none"
+                >
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                  <option value="CNY">CNY</option>
+                  <option value="AED">AED</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  Quantity
+                </label>
+                <input
+                  type="text"
+                  value={formData.quantity}
+                  onChange={(e) =>
+                    setFormData({ ...formData, quantity: e.target.value })
+                  }
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white text-xs focus:border-emerald-500 outline-none"
+                />
+              </div>
             </div>
-            <div>
-              <span className="text-slate-500 block text-[11px]">Supplier</span>
-              <span className="font-medium text-slate-800 truncate block">{formData.supplier}</span>
-            </div>
-            <div>
-              <span className="text-slate-500 block text-[11px]">Bank</span>
-              <span className="font-medium text-slate-800 truncate block">{formData.bank}</span>
-            </div>
-            <div>
-              <span className="text-slate-500 block text-[11px]">Delivery / Payment</span>
-              <span className="font-medium text-slate-800">
-                {formData.termOfDelivery} · {formData.termOfPayment}
-              </span>
-            </div>
-            <div>
-              <span className="text-slate-500 block text-[11px]">Route</span>
-              <span className="font-medium text-slate-800">
-                {formData.voyageFrom} &rarr; {formData.voyageTo}
-              </span>
+
+            {/* Supplier & Bank */}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  Supplier
+                </label>
+                <input
+                  type="text"
+                  value={formData.supplier}
+                  onChange={(e) =>
+                    setFormData({ ...formData, supplier: e.target.value })
+                  }
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white text-xs focus:border-emerald-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                  Commercial Bank
+                </label>
+                <select
+                  value={formData.bank}
+                  onChange={(e) =>
+                    setFormData({ ...formData, bank: e.target.value })
+                  }
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white text-xs focus:border-emerald-500 outline-none"
+                >
+                  {COMMON_BANKS.map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 

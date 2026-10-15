@@ -4,6 +4,10 @@ import {
   MilestoneId,
 } from '../utils/trackerLogic';
 import {
+  COMMON_DELIVERY_TERMS,
+  COMMON_PAYMENT_TERMS,
+} from '../types';
+import {
   Search,
   CheckCircle2,
   Calendar,
@@ -286,11 +290,44 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
     <td
       key="delivery"
       onClick={() => setActiveCellAddress(`Delivery ${rowNumber}: ${item.termOfDelivery}`)}
-      className="px-3 py-2 border-r border-slate-200 text-slate-700 whitespace-nowrap min-w-[90px]"
+      onDoubleClick={() => handleStartEdit(item.id, 'termOfDelivery', item.termOfDelivery, `Delivery ${rowNumber}: ${item.termOfDelivery}`)}
+      className="px-3 py-2 border-r border-slate-200 text-slate-700 whitespace-nowrap min-w-[100px] cursor-pointer"
+      title="Double-click to edit Delivery Term (Incoterm)"
     >
-      <span className="px-2 py-0.5 bg-slate-100 text-slate-800 rounded font-mono text-[11px] font-semibold border border-slate-200">
-        {item.termOfDelivery}
-      </span>
+      {editingCell?.id === item.id && editingCell.field === 'termOfDelivery' ? (
+        <select
+          autoFocus
+          value={editValue}
+          onChange={(e) => {
+            const val = e.target.value;
+            setEditValue(val);
+            onUpdateItemField(item.id, 'termOfDelivery', val);
+            setEditingCell(null);
+          }}
+          onBlur={handleSaveEdit}
+          onKeyDown={handleKeyDown}
+          className="w-full px-1 py-0.5 border border-emerald-500 rounded bg-white text-xs outline-none font-medium"
+        >
+          {COMMON_DELIVERY_TERMS.map((term) => {
+            const code = term.split(' ')[0];
+            return (
+              <option key={term} value={code}>
+                {term}
+              </option>
+            );
+          })}
+        </select>
+      ) : (
+        <div
+          onClick={() => handleStartEdit(item.id, 'termOfDelivery', item.termOfDelivery, `Delivery ${rowNumber}: ${item.termOfDelivery}`)}
+          className="flex items-center gap-1.5 group cursor-pointer"
+        >
+          <span className="px-2 py-0.5 bg-slate-100 group-hover:bg-emerald-50 group-hover:text-emerald-800 group-hover:border-emerald-300 text-slate-800 rounded font-mono text-[11px] font-semibold border border-slate-200 transition-colors">
+            {item.termOfDelivery}
+          </span>
+          <Edit3 className="w-3 h-3 text-slate-400 opacity-40 group-hover:opacity-100 transition-opacity" />
+        </div>
+      )}
     </td>
   );
 
@@ -298,11 +335,41 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
     <td
       key="payment"
       onClick={() => setActiveCellAddress(`Payment ${rowNumber}: ${item.termOfPayment}`)}
-      className="px-3 py-2 border-r border-slate-200 text-slate-700 whitespace-nowrap min-w-[105px]"
+      onDoubleClick={() => handleStartEdit(item.id, 'termOfPayment', item.termOfPayment, `Payment ${rowNumber}: ${item.termOfPayment}`)}
+      className="px-3 py-2 border-r border-slate-200 text-slate-700 whitespace-nowrap min-w-[130px] cursor-pointer"
+      title="Double-click to edit Payment Term"
     >
-      <span className="text-xs text-slate-800 font-medium">
-        {item.termOfPayment}
-      </span>
+      {editingCell?.id === item.id && editingCell.field === 'termOfPayment' ? (
+        <select
+          autoFocus
+          value={editValue}
+          onChange={(e) => {
+            const val = e.target.value;
+            setEditValue(val);
+            onUpdateItemField(item.id, 'termOfPayment', val);
+            setEditingCell(null);
+          }}
+          onBlur={handleSaveEdit}
+          onKeyDown={handleKeyDown}
+          className="w-full px-1 py-0.5 border border-emerald-500 rounded bg-white text-xs outline-none"
+        >
+          {COMMON_PAYMENT_TERMS.map((pay) => (
+            <option key={pay} value={pay}>
+              {pay}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <div
+          onClick={() => handleStartEdit(item.id, 'termOfPayment', item.termOfPayment, `Payment ${rowNumber}: ${item.termOfPayment}`)}
+          className="flex items-center gap-1.5 group cursor-pointer"
+        >
+          <span className="text-xs text-slate-800 font-medium group-hover:text-emerald-700">
+            {item.termOfPayment}
+          </span>
+          <Edit3 className="w-3 h-3 text-slate-400 opacity-40 group-hover:opacity-100 transition-opacity" />
+        </div>
+      )}
     </td>
   );
 
