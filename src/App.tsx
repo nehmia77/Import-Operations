@@ -9,6 +9,8 @@ import { NewItemModal } from './components/NewItemModal';
 import { ItemDrawer } from './components/ItemDrawer';
 import { LocalSetupModal } from './components/LocalSetupModal';
 import { Download, Laptop } from 'lucide-react';
+import { useSharedItems } from './useSharedItems';
+import { SignInGate } from './components/SignInGate';
 
 const STORAGE_KEY = 'importops_user_sheet_data';
 
@@ -49,6 +51,8 @@ export default function App() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch (_) {}
   }, [items]);
+
+  const cloud = useSharedItems(items, setItems);
 
   const summaryStats = calculateSummaryStats(items);
 
@@ -142,6 +146,11 @@ export default function App() {
     setSelectedItemForDrawer(null);
   };
 
+  if (cloud.cloudEnabled && !cloud.authReady) return null;
+  if (cloud.cloudEnabled && !cloud.user) {
+    return <SignInGate onSignIn={() => cloud.signIn().catch(() => {})} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 font-sans">
       {/* Top Bar */}
@@ -164,8 +173,19 @@ export default function App() {
               </h1>
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-md text-[11px] font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Auto-Saved in Browser</span>
+                <span>
+                  {!cloud.cloudEnabled && 'Saved on this device only'}
+                  {cloud.status === 'connecting' && 'Connecting…'}
+                  {cloud.status === 'saving' && 'Saving…'}
+                  {cloud.status === 'synced' && 'Shared & synced'}
+                  {cloud.status === 'error' && 'Sync error: ' + cloud.error}
+                </span>
               </span>
+              {cloud.user && (
+                <button onClick={() => cloud.signOut()} className="text-[11px] text-slate-500 underline cursor-pointer">
+                  Sign out
+                </button>
+              )}
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
               Track Proforma Invoices with automated <strong>Foreign currency approval</strong>, <strong>Insurance</strong>, and <strong>Bank Permit</strong> milestones.
