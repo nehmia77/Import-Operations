@@ -30,6 +30,10 @@ export interface ImportItem {
   };
   overallStatus?: string;
   createdAt: string;
+  custom?: Record<string, string>; // user-added columns, keyed by column id
+  updatedBy?: string; // email of last editor (set by sync layer)
+  updatedByName?: string;
+  updatedAt?: string; // ISO time of last edit
 }
 
 export const DEFAULT_MILESTONES: Record<MilestoneId, { name: string }> = {
