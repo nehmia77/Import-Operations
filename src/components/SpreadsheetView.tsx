@@ -24,6 +24,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import type { CustomColumn } from '../useSharedItems';
 
 interface SpreadsheetViewProps {
   items: ImportItem[];
@@ -45,6 +46,10 @@ interface SpreadsheetViewProps {
   onOpenGoogleSheetModal: () => void;
   activeStatusFilter: string;
   setActiveStatusFilter: (filter: any) => void;
+  customColumns: CustomColumn[];
+  onUpdateCustomField: (itemId: string, columnId: string, value: string) => void;
+  onManageColumns: () => void;
+  showLastEdit: boolean;
 }
 
 export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
@@ -58,6 +63,10 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
   onOpenGoogleSheetModal,
   activeStatusFilter,
   setActiveStatusFilter,
+  customColumns,
+  onUpdateCustomField,
+  onManageColumns,
+  showLastEdit,
 }) => {
   const [columnLayout, setColumnLayout] = useState<'workflow' | 'skeleton'>('workflow');
   const [searchQuery, setSearchQuery] = useState('');
@@ -124,6 +133,11 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
   const handleSaveEdit = () => {
     if (!editingCell) return;
     const { id, field } = editingCell;
+    if (field.startsWith('custom:')) {
+      onUpdateCustomField(id, field.slice(7), editValue);
+      setEditingCell(null);
+      return;
+    }
     const value = field === 'totalAmount' ? parseFloat(editValue) || 0 : editValue;
     onUpdateItemField(id, field as keyof ImportItem, value);
     setEditingCell(null);
@@ -746,6 +760,52 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
     </td>
   );
 
+  const renderCustomCells = (item: ImportItem, rowNumber: number) => (
+    <>
+      {customColumns.map((col) => {
+        const val = item.custom?.[col.id] ?? '';
+        const field = `custom:${col.id}`;
+        return (
+          <td
+            key={col.id}
+            onClick={() => setActiveCellAddress(`${col.name} ${rowNumber}: ${val}`)}
+            onDoubleClick={() => handleStartEdit(item.id, field, val, `${col.name} ${rowNumber}: ${val}`)}
+            className="px-3 py-2 border-r border-slate-200 cursor-text text-slate-700 min-w-[140px]"
+          >
+            {editingCell?.id === item.id && editingCell.field === field ? (
+              <input
+                type="text"
+                autoFocus
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={handleSaveEdit}
+                onKeyDown={handleKeyDown}
+                className="w-full px-1.5 py-0.5 border border-emerald-500 rounded bg-white text-xs outline-none"
+              />
+            ) : (
+              <span className="truncate block max-w-[180px]" title={val}>
+                {val || <span className="text-slate-300 italic">...</span>}
+              </span>
+            )}
+          </td>
+        );
+      })}
+      {showLastEdit && (
+        <td className="px-3 py-2 border-r border-slate-200 text-[11px] text-slate-500 whitespace-nowrap min-w-[150px]">
+          {item.updatedAt ? (
+            <>
+              <span className="font-semibold text-slate-700">{item.updatedByName || item.updatedBy}</span>
+              <br />
+              {new Date(item.updatedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+            </>
+          ) : (
+            <span className="text-slate-300">-</span>
+          )}
+        </td>
+      )}
+    </>
+  );
+
   const renderActionsCell = (item: ImportItem, rowNumber: number) => (
     <td key="actions" className="px-3 py-2 text-center whitespace-nowrap w-24">
       <div className="flex items-center justify-center gap-1">
@@ -896,6 +956,13 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
         {/* Right Toolbar Actions */}
         <div className="flex items-center gap-2">
           <button
+            onClick={onManageColumns}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Columns
+          </button>
+          <button
             onClick={onOpenGoogleSheetModal}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
             title="Export or sync with Google Sheets"
@@ -963,6 +1030,12 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
                   <th className="px-3 py-1 border-r border-slate-200 font-normal">M</th>
                   <th className="px-3 py-1 border-r border-slate-200 font-normal">N</th>
                   <th className="px-3 py-1 border-r border-slate-200 font-normal">O</th>
+                  {customColumns.map((c, i) => (
+                    <th key={c.id} className="px-3 py-1 border-r border-slate-200 font-normal">
+                      {String.fromCharCode(80 + i)}
+                    </th>
+                  ))}
+                  {showLastEdit && <th className="px-3 py-1 border-r border-slate-200 font-normal">&middot;</th>}
                   <th className="w-24 px-3 py-1 text-center font-normal">Actions</th>
                 </tr>
                 <tr className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200 tracking-tight">
@@ -1001,6 +1074,12 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
                   <th className="px-3 py-2.5 border-r border-slate-200 min-w-[110px]">Voyage To</th>
                   <th className="px-3 py-2.5 border-r border-slate-200 min-w-[110px]">PI No</th>
                   <th className="px-3 py-2.5 border-r border-slate-200 min-w-[95px]">Date</th>
+                  {customColumns.map((c) => (
+                    <th key={c.id} className="px-3 py-2.5 border-r border-slate-200 min-w-[140px]">
+                      {c.name}
+                    </th>
+                  ))}
+                  {showLastEdit && <th className="px-3 py-2.5 border-r border-slate-200 min-w-[150px]">Last edited</th>}
                   <th className="px-3 py-2.5 text-center">Manage</th>
                 </tr>
               </>
@@ -1033,6 +1112,12 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
                   <th className="px-3 py-1 border-r border-slate-200 font-normal">M</th>
                   <th className="px-3 py-1 border-r border-slate-200 font-normal">N</th>
                   <th className="px-3 py-1 border-r border-slate-200 font-normal">O</th>
+                  {customColumns.map((c, i) => (
+                    <th key={c.id} className="px-3 py-1 border-r border-slate-200 font-normal">
+                      {String.fromCharCode(80 + i)}
+                    </th>
+                  ))}
+                  {showLastEdit && <th className="px-3 py-1 border-r border-slate-200 font-normal">&middot;</th>}
                   <th className="w-24 px-3 py-1 text-center font-normal">Actions</th>
                 </tr>
                 <tr className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200 tracking-tight">
@@ -1070,6 +1155,12 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
                   <th className="px-3 py-2.5 border-r border-slate-200 min-w-[130px]">Overall Status</th>
                   <th className="px-3 py-2.5 border-r border-slate-200 min-w-[110px]">PI No</th>
                   <th className="px-3 py-2.5 border-r border-slate-200 min-w-[95px]">Date</th>
+                  {customColumns.map((c) => (
+                    <th key={c.id} className="px-3 py-2.5 border-r border-slate-200 min-w-[140px]">
+                      {c.name}
+                    </th>
+                  ))}
+                  {showLastEdit && <th className="px-3 py-2.5 border-r border-slate-200 min-w-[150px]">Last edited</th>}
                   <th className="px-3 py-2.5 text-center">Manage</th>
                 </tr>
               </>
@@ -1079,7 +1170,7 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
           <tbody className="divide-y divide-slate-200">
             {filteredItems.length === 0 ? (
               <tr>
-                <td colSpan={18} className="py-16 text-center text-slate-500">
+                <td colSpan={18 + customColumns.length + (showLastEdit ? 1 : 0)} className="py-16 text-center text-slate-500">
                   <div className="flex flex-col items-center justify-center max-w-md mx-auto">
                     <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center mb-3">
                       <FileSpreadsheet className="w-6 h-6" />
@@ -1145,6 +1236,7 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
                         {renderVoyageToCell(item, rowNumber)}
                         {renderPiNoCell(item, rowNumber)}
                         {renderDateCell(item, rowNumber)}
+                        {renderCustomCells(item, rowNumber)}
                         {renderActionsCell(item, rowNumber)}
                       </>
                     ) : (
@@ -1165,6 +1257,7 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
                         {renderStatusCell(item, rowNumber)}
                         {renderPiNoCell(item, rowNumber)}
                         {renderDateCell(item, rowNumber)}
+                        {renderCustomCells(item, rowNumber)}
                         {renderActionsCell(item, rowNumber)}
                       </>
                     )}
@@ -1175,7 +1268,7 @@ export const SpreadsheetView: React.FC<SpreadsheetViewProps> = ({
 
             {/* Quick Inline Row Addition Row */}
             <tr className="bg-slate-50/50 hover:bg-slate-100/50 transition-colors border-t-2 border-dashed border-slate-200">
-              <td colSpan={18} className="py-2.5 px-4 text-center">
+              <td colSpan={18 + customColumns.length + (showLastEdit ? 1 : 0)} className="py-2.5 px-4 text-center">
                 <button
                   onClick={onAddNewRow}
                   className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-800 hover:text-emerald-950 py-1.5 px-3 rounded-lg hover:bg-emerald-100/60 transition-colors cursor-pointer"
