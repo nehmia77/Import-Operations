@@ -11,6 +11,9 @@ import { LocalSetupModal } from './components/LocalSetupModal';
 import { Download, Laptop } from 'lucide-react';
 import { useSharedItems } from './useSharedItems';
 import { SignInGate } from './components/SignInGate';
+import { AccessDenied } from './components/AccessDenied';
+import { ColumnsModal } from './components/ColumnsModal';
+import { HistoryModal } from './components/HistoryModal';
 
 const STORAGE_KEY = 'importops_user_sheet_data';
 
@@ -54,6 +57,8 @@ export default function App() {
 
   const cloud = useSharedItems(items, setItems);
   const [signInError, setSignInError] = useState('');
+  const [isColumnsOpen, setIsColumnsOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const summaryStats = calculateSummaryStats(items);
 
@@ -85,6 +90,15 @@ export default function App() {
           [field]: value,
         };
       })
+    );
+  };
+
+  // Update a user-added column value on one row
+  const handleUpdateCustomField = (itemId: string, columnId: string, value: string) => {
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === itemId ? { ...i, custom: { ...(i.custom || {}), [columnId]: value } } : i
+      )
     );
   };
 
@@ -148,6 +162,9 @@ export default function App() {
   };
 
   if (cloud.cloudEnabled && !cloud.authReady) return null;
+  if (cloud.cloudEnabled && cloud.user && cloud.denied) {
+    return <AccessDenied email={cloud.user.email || ''} onSignOut={() => cloud.signOut()} />;
+  }
   if (cloud.cloudEnabled && !cloud.user) {
     return (
       <SignInGate
@@ -171,6 +188,7 @@ export default function App() {
         onAddNewItem={() => setIsNewItemModalOpen(true)}
         onOpenGoogleSheetModal={() => setIsGoogleSheetModalOpen(true)}
         onOpenLocalSetupModal={() => setIsLocalSetupModalOpen(true)}
+        onOpenHistory={cloud.cloudEnabled ? () => setIsHistoryOpen(true) : undefined}
       />
 
       {/* Main Content Area */}
@@ -245,6 +263,10 @@ export default function App() {
             onOpenGoogleSheetModal={() => setIsGoogleSheetModalOpen(true)}
             activeStatusFilter={activeStatusFilter}
             setActiveStatusFilter={setActiveStatusFilter}
+            customColumns={cloud.columns}
+            onUpdateCustomField={handleUpdateCustomField}
+            onManageColumns={() => setIsColumnsOpen(true)}
+            showLastEdit={cloud.cloudEnabled}
           />
         ) : (
           <KanbanView
@@ -280,6 +302,17 @@ export default function App() {
         onClose={() => setSelectedItemForDrawer(null)}
         onUpdateItem={handleUpdateItem}
       />
+
+      {isColumnsOpen && (
+        <ColumnsModal
+          columns={cloud.columns}
+          onAdd={cloud.addColumn}
+          onRename={cloud.renameColumn}
+          onRemove={cloud.removeColumn}
+          onClose={() => setIsColumnsOpen(false)}
+        />
+      )}
+      {isHistoryOpen && <HistoryModal onClose={() => setIsHistoryOpen(false)} />}
     </div>
   );
 }
