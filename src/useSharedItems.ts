@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { collection, deleteDoc, doc, onSnapshot, setDoc } from 'firebase/firestore';
-import { onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut, User } from 'firebase/auth';
 import { auth, cloudEnabled, db, googleProvider } from './firebase';
 import type { ImportItem } from './utils/trackerLogic';
 
@@ -108,7 +108,18 @@ export function useSharedItems(
     authReady,
     status,
     error,
-    signIn: () => signInWithPopup(auth!, googleProvider),
+    signIn: async () => {
+      try {
+        await signInWithPopup(auth!, googleProvider);
+      } catch (e: any) {
+        // Popup blocked by the browser → fall back to a full-page redirect
+        if (e?.code === 'auth/popup-blocked') {
+          await signInWithRedirect(auth!, googleProvider);
+          return;
+        }
+        throw e;
+      }
+    },
     signOut: () => signOut(auth!),
   };
 }
