@@ -53,6 +53,7 @@ export default function App() {
   }, [items]);
 
   const cloud = useSharedItems(items, setItems);
+  const [signInError, setSignInError] = useState('');
 
   const summaryStats = calculateSummaryStats(items);
 
@@ -148,7 +149,17 @@ export default function App() {
 
   if (cloud.cloudEnabled && !cloud.authReady) return null;
   if (cloud.cloudEnabled && !cloud.user) {
-    return <SignInGate onSignIn={() => cloud.signIn().catch(() => {})} />;
+    return (
+      <SignInGate
+        error={signInError}
+        onSignIn={() => {
+          setSignInError('');
+          cloud.signIn().catch((e: any) =>
+            setSignInError((e?.code || 'error') + ' — ' + (e?.message || 'Sign-in failed'))
+          );
+        }}
+      />
+    );
   }
 
   return (
